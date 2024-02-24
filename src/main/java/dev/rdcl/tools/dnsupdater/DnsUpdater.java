@@ -10,7 +10,6 @@ import dev.rdcl.tools.dnsupdater.config.DomainConfig;
 import dev.rdcl.tools.ipcheck.Ipv4CheckService;
 import dev.rdcl.tools.ipcheck.Ipv6CheckService;
 import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
@@ -28,20 +27,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DnsUpdater {
 
-    private final MeterRegistry registry;
-
     private final Logger log;
-
     private final DnsUpdateProperties properties;
+    private final DnsUpdaterMetrics metrics;
+    private final DnsService dnsService;
 
     @RestClient
     private final Ipv4CheckService ipv4CheckService;
-
     @RestClient
     private final Ipv6CheckService ipv6CheckService;
-
-    private final DnsService dnsService;
-
     @RestClient
     private final DODomainsService doDomainsService;
 
@@ -56,7 +50,7 @@ public class DnsUpdater {
                     properties.config(),
                     ex.getLocalizedMessage()
             );
-            registry.counter("tools.sysadmin.update-dns.fails");
+            metrics.failureCounter().count();
 
             return;
         }
@@ -86,7 +80,7 @@ public class DnsUpdater {
             }
         } catch (Exception ex) {
             log.errorf(ex, "failed to update dns: %s", ex.getLocalizedMessage());
-            registry.counter("tools.sysadmin.update-dns.failed");
+            metrics.failureCounter().count();
         }
     }
 
@@ -129,12 +123,12 @@ public class DnsUpdater {
                 log.infof("update record %s with ip %s: %s", id, ip, config);
                 DODomainUpdateRecordRequest body = new DODomainUpdateRecordRequest(ip);
                 doDomainsService.updateDnsRecord(topDomain, id, body);
-                registry.counter("tools.sysadmin.update-dns.records-updated");
+                metrics.recordsUpdatedCounter().count();
             } else {
                 log.infof("create record with ip %s: %s", ip, config);
                 DODomainCreateRecordRequest body = new DODomainCreateRecordRequest(config.ipVersion().toRecordType(), config.name(), ip);
                 doDomainsService.createDnsRecord(topDomain, body);
-                registry.counter("tools.sysadmin.update-dns.records-created");
+                metrics.recordsCreatedCounter().count();
             }
         }
     }
