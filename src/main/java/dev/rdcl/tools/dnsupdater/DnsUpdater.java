@@ -14,23 +14,23 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
-@Log
 public class DnsUpdater {
 
     private final MeterRegistry registry;
+
+    private final Logger log;
 
     private final DnsUpdateProperties properties;
 
@@ -52,23 +52,23 @@ public class DnsUpdater {
         try {
             updateDnsConfig = Config.fromJsonFile(properties.config());
         } catch (IOException ex) {
-            log.log(Level.SEVERE, ex, () -> "failed to read config file '%s': %s".formatted(
+            log.errorf(ex, "failed to read config file '%s': %s",
                     properties.config(),
                     ex.getLocalizedMessage()
-            ));
+            );
             registry.counter("tools.sysadmin.update-dns.fails");
 
             return;
         }
 
-        log.info(() -> "checking %s records".formatted(updateDnsConfig.domains().size()));
-        log.finer(updateDnsConfig.toString());
+        log.infof("checking %s records", updateDnsConfig.domains().size());
+        log.trace(updateDnsConfig.toString());
 
         try {
             String ipv4 = ipv4CheckService.get();
             String ipv6 = ipv6CheckService.get();
 
-            log.info(() -> "resolved ip addresses: ipv4=%s, ipv6=%s".formatted(ipv4, ipv6));
+            log.infof("resolved ip addresses: ipv4=%s, ipv6=%s", ipv4, ipv6);
 
             Map<String, List<DomainConfig>> toUpdate = updateDnsConfig
                     .domains()
@@ -76,7 +76,7 @@ public class DnsUpdater {
                     .filter(config -> updateDnsConfig.forceUpdate() || !hasCorrectIp(config, ipv4, ipv6))
                     .collect(Collectors.groupingBy(DomainConfig::topDomain));
 
-            log.info(() -> "updating %s records".formatted(count(toUpdate)));
+            log.infof("updating %s records", count(toUpdate));
 
             for (var entry : toUpdate.entrySet()) {
                 String topDomain = entry.getKey();
@@ -85,7 +85,7 @@ public class DnsUpdater {
                 update(topDomain, configs, ipv4, ipv6);
             }
         } catch (Exception ex) {
-            log.log(Level.SEVERE, ex, () -> "failed to update dns: %s".formatted(ex.getLocalizedMessage()));
+            log.errorf(ex, "failed to update dns: %s", ex.getLocalizedMessage());
             registry.counter("tools.sysadmin.update-dns.failed");
         }
     }
@@ -93,7 +93,7 @@ public class DnsUpdater {
     private boolean hasCorrectIp(DomainConfig config, String ipv4, String ipv6) {
         List<String> resolved = dnsService.resolve(config.ipVersion(), config.fullDomain());
 
-        log.fine(() -> "%s resolved to %s".formatted(config.fullDomain(), String.join(", ", resolved)));
+        log.debugf("%s resolved to %s", config.fullDomain(), String.join(", ", resolved));
 
         return switch (config.ipVersion()) {
             case V4 -> resolved.contains(ipv4);
@@ -110,7 +110,7 @@ public class DnsUpdater {
                 .stream()
                 .collect(Collectors.groupingBy(DODomainRecord::name));
 
-        log.info(() -> "found %s records for %s".formatted(count(existingRecords), topDomain));
+        log.infof("found %s records for %s", count(existingRecords), topDomain);
 
         for (DomainConfig config : configs) {
             Optional<Long> optionalId = existingRecords.getOrDefault(config.name(), List.of())
@@ -126,12 +126,12 @@ public class DnsUpdater {
 
             if (optionalId.isPresent()) {
                 long id = optionalId.get();
-                log.info(() -> "update record %s with ip %s: %s".formatted(id, ip, config));
+                log.infof("update record %s with ip %s: %s", id, ip, config);
                 DODomainUpdateRecordRequest body = new DODomainUpdateRecordRequest(ip);
                 doDomainsService.updateDnsRecord(topDomain, id, body);
                 registry.counter("tools.sysadmin.update-dns.records-updated");
             } else {
-                log.info(() -> "create record with ip %s: %s".formatted(ip, config));
+                log.infof("create record with ip %s: %s", ip, config);
                 DODomainCreateRecordRequest body = new DODomainCreateRecordRequest(config.ipVersion().toRecordType(), config.name(), ip);
                 doDomainsService.createDnsRecord(topDomain, body);
                 registry.counter("tools.sysadmin.update-dns.records-created");
