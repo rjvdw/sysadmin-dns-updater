@@ -5,6 +5,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.dns.DnsClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
@@ -12,10 +13,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DnsService {
 
+    private final Logger log;
     private final Vertx vertx;
     private final DnsProperties dnsProperties;
 
     public List<String> resolve(IpVersion ipv, String name) {
+        log.debugf("using name server %s:%s", dnsProperties.host(), dnsProperties.port());
         DnsClient client = vertx.createDnsClient(dnsProperties.port(), dnsProperties.host());
 
         return switch (ipv) {
