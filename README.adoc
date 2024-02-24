@@ -1,0 +1,45 @@
+= Sysadmin tooling
+
+This application provides some tooling for common system administration tasks.
+
+== DNS Updater
+
+The DNS updater automatically updates DNS records for specified domains to the public IPv4 or IPv6 address of the machine the application is running on.
+
+=== Setup
+
+[%header,cols="3,1,6"]
+|===
+|Config
+|Type
+|Description
+
+|dns-updater.config
+|Path
+|The path to the location where the JSON configuration file can be found. See the next section for more information.
+
+|digital-ocean.token
+|String
+|The secret token needed to connect with the Digital Ocean API.
+
+|quarkus.rest-client.check-ipv4.url
+|URL
+|The URL to a service which responds with the public IPv4 address of the requester.
+
+|quarkus.rest-client.check-ipv6.url
+|URL
+|The URL to a service which responds with the public IPv6 address of the requester.
+
+|dns-resolver-port
+|int
+|The port on which the DNS resolver is listening. Defaults to 53.
+
+|dns-resolver-host
+|String
+|The address on which the DNS resolver can be reached.
+|===
+
+=== Configuration
+
+The domains that need to be checked should be specified in a configuration JSON.
+This JSON is described by link:./dns-updater-config.schema.json[dns-updater-config.schema.json].

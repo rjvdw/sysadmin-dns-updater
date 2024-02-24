@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tools.rdcl.dev/sysadmin/dns-updater-config.schema.json",
+  "title": "DNS Updater Config",
+  "description": "Configuration for the DNS updater tool, which specifies which domains should be checked.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "The JSON schema with which to validate this configuration file",
+      "type": "string"
+    },
+    "force_update": {
+      "description": "When true, the DNS records will be updated, regardless of what IP they currently resolve to.",
+      "type": "boolean"
+    },
+    "domains": {
+      "description": "The domains that should be checked.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "description": "The top-level domain.",
+            "type": "string"
+          },
+          "sub": {
+            "description": "The name of the domain record. Can be omitted for top level domain records.",
+            "type": "string"
+          },
+          "type": {
+            "description": "Whether this is a IPv4 (A) or IPv6 (AAAA) record.",
+            "type": "string",
+            "enum": ["ipv4", "ipv6"]
+          }
+        },
+        "required": ["root", "type"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["domains"],
+  "additionalProperties": false
+}
