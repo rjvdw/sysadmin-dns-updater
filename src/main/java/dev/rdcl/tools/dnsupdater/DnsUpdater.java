@@ -29,8 +29,8 @@ public class DnsUpdater {
 
     private final Logger log;
     private final DnsUpdateProperties properties;
-    private final DnsUpdaterMetrics metrics;
     private final DnsService dnsService;
+    private final DnsUpdaterMetricsService metrics;
 
     @RestClient
     private final Ipv4CheckService ipv4CheckService;
@@ -50,9 +50,8 @@ public class DnsUpdater {
                     properties.config(),
                     ex.getLocalizedMessage()
             );
-            metrics.failureCounter().count();
-
-            return;
+            metrics.invalidConfigCounter(ex).increment();
+            throw new DnsUpdateFailed(ex);
         }
 
         log.infof("checking %s records", updateDnsConfig.domains().size());
@@ -79,8 +78,7 @@ public class DnsUpdater {
                 update(topDomain, configs, ipv4, ipv6);
             }
         } catch (Exception ex) {
-            log.errorf(ex, "failed to update dns: %s", ex.getLocalizedMessage());
-            metrics.failureCounter().count();
+            throw new DnsUpdateFailed(ex);
         }
     }
 
@@ -120,15 +118,25 @@ public class DnsUpdater {
 
             if (optionalId.isPresent()) {
                 long id = optionalId.get();
-                log.infof("update record %s with ip %s: %s", id, ip, config);
-                DODomainUpdateRecordRequest body = new DODomainUpdateRecordRequest(ip);
-                doDomainsService.updateDnsRecord(topDomain, id, body);
-                metrics.recordsUpdatedCounter().count();
+                try {
+                    log.infof("update record %s with ip %s: %s", id, ip, config);
+                    DODomainUpdateRecordRequest body = new DODomainUpdateRecordRequest(ip);
+                    doDomainsService.updateDnsRecord(topDomain, id, body);
+                    metrics.updatedCounter(config, ip).increment();
+                } catch (Exception ex) {
+                    log.errorf(ex, "failed to update record %s with ip %s: %s", id, ip, config);
+                    metrics.updatedCounter(config, ip, ex).increment();
+                }
             } else {
-                log.infof("create record with ip %s: %s", ip, config);
-                DODomainCreateRecordRequest body = new DODomainCreateRecordRequest(config.ipVersion().toRecordType(), config.name(), ip);
-                doDomainsService.createDnsRecord(topDomain, body);
-                metrics.recordsCreatedCounter().count();
+                try {
+                    log.infof("create record with ip %s: %s", ip, config);
+                    DODomainCreateRecordRequest body = new DODomainCreateRecordRequest(config.ipVersion().toRecordType(), config.name(), ip);
+                    doDomainsService.createDnsRecord(topDomain, body);
+                    metrics.createdCounter(config, ip).increment();
+                } catch (Exception ex) {
+                    log.errorf(ex, "failed to create record with ip %s: %s", ip, config);
+                    metrics.createdCounter(config, ip, ex).increment();
+                }
             }
         }
     }
