@@ -30,14 +30,24 @@ The DNS updater automatically updates DNS records for specified domains to the p
 |URL
 |The URL to a service which responds with the public IPv6 address of the requester.
 
-|dns-resolver-port
+|dns-resolver.port
 |int
 |The port on which the DNS resolver is listening. Defaults to 53.
 
-|dns-resolver-host
+|dns-resolver.host
 |String
 |The address on which the DNS resolver can be reached.
+
+|reporter.sender
+|String
+|The e-mail address that should be used for the "From" field in reporting e-mails.
+
+|reporter.recipients
+|List<String>
+|A list of e-mail addresses to whom reporting e-mails should be sent.
 |===
+
+It's also necessary to link:https://quarkus.io/guides/mailer-reference#configuring-the-smtp-credentials[configure the Quarkus mailer].
 
 === Configuration
 

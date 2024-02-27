@@ -7,8 +7,10 @@ import dev.rdcl.tools.digitalocean.domains.DODomainsService;
 import dev.rdcl.tools.dns.DnsService;
 import dev.rdcl.tools.dnsupdater.config.Config;
 import dev.rdcl.tools.dnsupdater.config.DomainConfig;
+import dev.rdcl.tools.health.HealthStatus;
 import dev.rdcl.tools.ipcheck.Ipv4CheckService;
 import dev.rdcl.tools.ipcheck.Ipv6CheckService;
+import dev.rdcl.tools.reporter.ReporterService;
 import io.micrometer.core.annotation.Counted;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -27,10 +29,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DnsUpdater {
 
+    private static final HealthStatus health = new HealthStatus(1, 5);
+
     private final Logger log;
     private final DnsUpdateProperties properties;
     private final DnsService dnsService;
     private final DnsUpdaterMetricsService metrics;
+    private final ReporterService reporterService;
 
     @RestClient
     private final Ipv4CheckService ipv4CheckService;
@@ -77,9 +82,19 @@ public class DnsUpdater {
 
                 update(topDomain, configs, ipv4, ipv6);
             }
+
+            health.registerSuccess();
         } catch (Exception ex) {
+            health.registerFailure();
             throw new DnsUpdateFailed(ex);
         }
+    }
+
+    @Scheduled(every = "15m")
+    public void checkHealth() {
+        health.checkIfChanged().ifPresent(healthy -> {
+            reporterService.reportHealth(DnsUpdater.class, healthy);
+        });
     }
 
     private boolean hasCorrectIp(DomainConfig config, String ipv4, String ipv6) {
