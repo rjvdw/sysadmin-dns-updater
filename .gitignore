@@ -8,6 +8,7 @@ release.properties
 
 # Local environment
 .env
+config/application.properties
 
 # Plugin directory
 /.quarkus/cli/plugins/
