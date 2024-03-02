@@ -43,17 +43,7 @@ public class DnsUpdater {
     @Scheduled(every = "5m")
     @Counted("tools.sysadmin.update-dns.runs")
     public void updateDns() {
-        Config updateDnsConfig;
-        try {
-            updateDnsConfig = Config.fromJsonFile(properties.config());
-        } catch (IOException ex) {
-            log.errorf(ex, "failed to read config file '%s': %s",
-                    properties.config(),
-                    ex.getLocalizedMessage()
-            );
-            metrics.invalidConfigCounter(ex).increment();
-            throw new DnsUpdateFailed(ex);
-        }
+        Config updateDnsConfig = readConfig();
 
         log.infof("checking %s records", updateDnsConfig.domains().size());
         log.trace(updateDnsConfig.toString());
@@ -91,6 +81,19 @@ public class DnsUpdater {
         health.checkIfChanged().ifPresent(healthy -> {
             reporterService.reportHealth(DnsUpdater.class, healthy);
         });
+    }
+
+    private Config readConfig() {
+        try {
+            return Config.fromJsonFile(properties.config());
+        } catch (IOException ex) {
+            log.errorf(ex, "failed to read config file '%s': %s",
+                    properties.config(),
+                    ex.getLocalizedMessage()
+            );
+            metrics.invalidConfigCounter(ex).increment();
+            throw new DnsUpdateFailed(ex);
+        }
     }
 
     private boolean hasCorrectIp(DomainConfig config, String ipv4, String ipv6) {
