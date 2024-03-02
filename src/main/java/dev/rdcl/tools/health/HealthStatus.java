@@ -1,7 +1,5 @@
 package dev.rdcl.tools.health;
 
-import lombok.Getter;
-
 import java.util.Optional;
 
 public class HealthStatus {
@@ -14,7 +12,6 @@ public class HealthStatus {
     /**
      * Whether the system is healthy or unhealthy.
      */
-    @Getter
     private boolean healthy = true;
 
     /**

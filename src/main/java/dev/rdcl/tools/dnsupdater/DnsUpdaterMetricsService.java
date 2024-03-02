@@ -4,10 +4,9 @@ import dev.rdcl.tools.dnsupdater.config.DomainConfig;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
-import lombok.RequiredArgsConstructor;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
-@RequiredArgsConstructor
 public class DnsUpdaterMetricsService {
 
     private static final String NAME_INVALID_CONFIG = "tools.sysadmin.update-dns.invalid-config";
@@ -19,7 +18,7 @@ public class DnsUpdaterMetricsService {
 
     private static final String EXCEPTION_NONE = "none";
 
-    private final MeterRegistry registry;
+    @Inject MeterRegistry registry;
 
     public Counter invalidConfigCounter(Exception ex) {
         return registry.counter(NAME_INVALID_CONFIG,

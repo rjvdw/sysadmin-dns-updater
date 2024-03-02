@@ -14,7 +14,7 @@ import dev.rdcl.tools.reporter.ReporterService;
 import io.micrometer.core.annotation.Counted;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
-import lombok.RequiredArgsConstructor;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -26,23 +26,19 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-@RequiredArgsConstructor
 public class DnsUpdater {
 
     private static final HealthStatus health = new HealthStatus(1, 5);
 
-    private final Logger log;
-    private final DnsUpdateProperties properties;
-    private final DnsService dnsService;
-    private final DnsUpdaterMetricsService metrics;
-    private final ReporterService reporterService;
+    @Inject Logger log;
+    @Inject DnsUpdateProperties properties;
+    @Inject DnsService dnsService;
+    @Inject DnsUpdaterMetricsService metrics;
+    @Inject ReporterService reporterService;
 
-    @RestClient
-    private final Ipv4CheckService ipv4CheckService;
-    @RestClient
-    private final Ipv6CheckService ipv6CheckService;
-    @RestClient
-    private final DODomainsService doDomainsService;
+    @Inject @RestClient Ipv4CheckService ipv4CheckService;
+    @Inject @RestClient Ipv6CheckService ipv6CheckService;
+    @Inject @RestClient DODomainsService doDomainsService;
 
     @Scheduled(every = "5m")
     @Counted("tools.sysadmin.update-dns.runs")

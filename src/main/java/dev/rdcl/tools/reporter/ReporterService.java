@@ -3,16 +3,15 @@ package dev.rdcl.tools.reporter;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
-import lombok.RequiredArgsConstructor;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
-@RequiredArgsConstructor
 public class ReporterService {
 
-    private final Logger log;
-    private final Mailer mailer;
-    private final ReporterProperties properties;
+    @Inject Logger log;
+    @Inject Mailer mailer;
+    @Inject ReporterProperties properties;
 
     public void reportHealth(Class<?> clz, boolean healthy) {
         String healthyText = healthy ? "healthy" : "unhealthy";

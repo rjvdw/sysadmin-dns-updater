@@ -4,18 +4,17 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.dns.DnsClient;
 import jakarta.enterprise.context.ApplicationScoped;
-import lombok.RequiredArgsConstructor;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.util.List;
 
 @ApplicationScoped
-@RequiredArgsConstructor
 public class DnsService {
 
-    private final Logger log;
-    private final Vertx vertx;
-    private final DnsProperties dnsProperties;
+    @Inject Logger log;
+    @Inject Vertx vertx;
+    @Inject DnsProperties dnsProperties;
 
     public List<String> resolve(IpVersion ipv, String name) {
         log.debugf("using name server %s:%s", dnsProperties.host(), dnsProperties.port());
