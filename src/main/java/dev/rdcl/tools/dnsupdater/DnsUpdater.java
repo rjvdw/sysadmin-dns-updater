@@ -11,7 +11,6 @@ import dev.rdcl.tools.health.HealthStatus;
 import dev.rdcl.tools.ipcheck.Ipv4CheckService;
 import dev.rdcl.tools.ipcheck.Ipv6CheckService;
 import dev.rdcl.tools.reporter.ReporterService;
-import io.micrometer.core.annotation.Counted;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -33,7 +32,6 @@ public class DnsUpdater {
     @Inject Logger log;
     @Inject DnsUpdateProperties properties;
     @Inject DnsService dnsService;
-    @Inject DnsUpdaterMetricsService metrics;
     @Inject ReporterService reporterService;
 
     @Inject @RestClient Ipv4CheckService ipv4CheckService;
@@ -41,7 +39,6 @@ public class DnsUpdater {
     @Inject @RestClient DODomainsService doDomainsService;
 
     @Scheduled(every = "5m")
-    @Counted("tools.sysadmin.update-dns.runs")
     public void updateDns() {
         Config updateDnsConfig = readConfig();
 
@@ -91,7 +88,6 @@ public class DnsUpdater {
                     properties.config(),
                     ex.getLocalizedMessage()
             );
-            metrics.invalidConfigCounter(ex).increment();
             throw new DnsUpdateFailed(ex);
         }
     }
@@ -136,20 +132,16 @@ public class DnsUpdater {
                     log.infof("update record %s with ip %s: %s", id, ip, config);
                     DODomainUpdateRecordRequest body = new DODomainUpdateRecordRequest(ip);
                     doDomainsService.updateDnsRecord(topDomain, id, body);
-                    metrics.updatedCounter(config, ip).increment();
                 } catch (Exception ex) {
                     log.errorf(ex, "failed to update record %s with ip %s: %s", id, ip, config);
-                    metrics.updatedCounter(config, ip, ex).increment();
                 }
             } else {
                 try {
                     log.infof("create record with ip %s: %s", ip, config);
                     DODomainCreateRecordRequest body = new DODomainCreateRecordRequest(config.ipVersion().toRecordType(), config.name(), ip);
                     doDomainsService.createDnsRecord(topDomain, body);
-                    metrics.createdCounter(config, ip).increment();
                 } catch (Exception ex) {
                     log.errorf(ex, "failed to create record with ip %s: %s", ip, config);
-                    metrics.createdCounter(config, ip, ex).increment();
                 }
             }
         }
