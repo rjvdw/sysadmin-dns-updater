@@ -17,11 +17,10 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -59,13 +58,7 @@ public class DnsUpdater {
 
             log.infof("updating %s records", count(toUpdate));
 
-            for (var entry : toUpdate.entrySet()) {
-                String topDomain = entry.getKey();
-                List<DomainConfig> configs = entry.getValue();
-
-                update(topDomain, configs, ipv4, ipv6);
-            }
-
+            toUpdate.forEach((topDomain, configs) -> update(topDomain, configs, ipv4, ipv6));
             health.registerSuccess();
         } catch (Exception ex) {
             health.registerFailure();
@@ -83,11 +76,12 @@ public class DnsUpdater {
     private Config readConfig() {
         try {
             return Config.fromJsonFile(properties.config());
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             log.errorf(ex, "failed to read config file '%s': %s",
                     properties.config(),
                     ex.getLocalizedMessage()
             );
+            health.registerFailure();
             throw new DnsUpdateFailed(ex);
         }
     }
@@ -114,11 +108,12 @@ public class DnsUpdater {
 
         log.infof("found %s records for %s", count(existingRecords), topDomain);
 
+        int failureCount = 0;
         for (DomainConfig config : configs) {
-            Optional<Long> optionalId = existingRecords.getOrDefault(config.name(), List.of())
+            OptionalLong optionalId = existingRecords.getOrDefault(config.name(), List.of())
                     .stream()
                     .filter(record -> config.ipVersion().toRecordType().equals(record.type()))
-                    .map(DODomainRecord::id)
+                    .mapToLong(DODomainRecord::id)
                     .findAny();
 
             String ip = switch (config.ipVersion()) {
@@ -127,13 +122,14 @@ public class DnsUpdater {
             };
 
             if (optionalId.isPresent()) {
-                long id = optionalId.get();
+                long id = optionalId.getAsLong();
                 try {
                     log.infof("update record %s with ip %s: %s", id, ip, config);
                     DODomainUpdateRecordRequest body = new DODomainUpdateRecordRequest(ip);
                     doDomainsService.updateDnsRecord(topDomain, id, body);
                 } catch (Exception ex) {
                     log.errorf(ex, "failed to update record %s with ip %s: %s", id, ip, config);
+                    failureCount += 1;
                 }
             } else {
                 try {
@@ -142,8 +138,14 @@ public class DnsUpdater {
                     doDomainsService.createDnsRecord(topDomain, body);
                 } catch (Exception ex) {
                     log.errorf(ex, "failed to create record with ip %s: %s", ip, config);
+                    failureCount += 1;
                 }
             }
+        }
+
+        if (failureCount > 0) {
+            log.errorf("%s records were not saved", failureCount);
+            health.registerFailure();
         }
     }
 
