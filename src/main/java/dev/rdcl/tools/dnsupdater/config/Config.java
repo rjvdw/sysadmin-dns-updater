@@ -25,9 +25,7 @@ public record Config(
 
             JsonObject configObj = jsonReader.readObject();
 
-            boolean forceUpdate = configObj.containsKey("force_update")
-                    ? configObj.getBoolean("force_update")
-                    : false;
+            boolean forceUpdate = configObj.containsKey("force_update") && configObj.getBoolean("force_update");
 
             List<DomainConfig> domains = configObj.getJsonArray("domains")
                     .stream()
