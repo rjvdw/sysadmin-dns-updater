@@ -1,6 +1,6 @@
-package dev.rdcl.tools.dnsupdater.config;
+package dev.rdcl.sysadmin.dnsupdater.config;
 
-import dev.rdcl.tools.dns.IpVersion;
+import dev.rdcl.sysadmin.dnsupdater.dns.IpVersion;
 
 public sealed interface DomainConfig permits RootDomainConfig, SubDomainConfig {
     IpVersion ipVersion();

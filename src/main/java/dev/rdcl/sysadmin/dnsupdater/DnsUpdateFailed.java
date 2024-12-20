@@ -1,4 +1,4 @@
-package dev.rdcl.tools.dnsupdater;
+package dev.rdcl.sysadmin.dnsupdater;
 
 public class DnsUpdateFailed extends RuntimeException {
     public DnsUpdateFailed(Throwable cause) {

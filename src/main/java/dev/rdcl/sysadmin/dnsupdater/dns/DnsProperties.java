@@ -1,4 +1,4 @@
-package dev.rdcl.tools.dns;
+package dev.rdcl.sysadmin.dnsupdater.dns;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;

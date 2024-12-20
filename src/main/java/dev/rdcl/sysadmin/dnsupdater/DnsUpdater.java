@@ -1,16 +1,15 @@
-package dev.rdcl.tools.dnsupdater;
+package dev.rdcl.sysadmin.dnsupdater;
 
-import dev.rdcl.tools.digitalocean.domains.DODomainCreateRecordRequest;
-import dev.rdcl.tools.digitalocean.domains.DODomainRecord;
-import dev.rdcl.tools.digitalocean.domains.DODomainUpdateRecordRequest;
-import dev.rdcl.tools.digitalocean.domains.DODomainsService;
-import dev.rdcl.tools.dns.DnsService;
-import dev.rdcl.tools.dnsupdater.config.Config;
-import dev.rdcl.tools.dnsupdater.config.DomainConfig;
-import dev.rdcl.tools.health.HealthStatus;
-import dev.rdcl.tools.ipcheck.Ipv4CheckService;
-import dev.rdcl.tools.ipcheck.Ipv6CheckService;
-import dev.rdcl.tools.reporter.ReporterService;
+import dev.rdcl.sysadmin.dnsupdater.digitalocean.domains.DODomainCreateRecordRequest;
+import dev.rdcl.sysadmin.dnsupdater.digitalocean.domains.DODomainRecord;
+import dev.rdcl.sysadmin.dnsupdater.digitalocean.domains.DODomainUpdateRecordRequest;
+import dev.rdcl.sysadmin.dnsupdater.digitalocean.domains.DODomainsService;
+import dev.rdcl.sysadmin.dnsupdater.dns.DnsService;
+import dev.rdcl.sysadmin.dnsupdater.config.Config;
+import dev.rdcl.sysadmin.dnsupdater.config.DomainConfig;
+import dev.rdcl.sysadmin.dnsupdater.ipcheck.Ipv4CheckService;
+import dev.rdcl.sysadmin.dnsupdater.ipcheck.Ipv6CheckService;
+import dev.rdcl.sysadmin.dnsupdater.reporter.ReporterService;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

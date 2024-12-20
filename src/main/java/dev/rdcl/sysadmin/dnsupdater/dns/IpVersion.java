@@ -1,4 +1,4 @@
-package dev.rdcl.tools.dns;
+package dev.rdcl.sysadmin.dnsupdater.dns;
 
 public enum IpVersion {
     V4, V6;

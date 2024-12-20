@@ -1,4 +1,4 @@
-package dev.rdcl.tools.health;
+package dev.rdcl.sysadmin.dnsupdater;
 
 import java.util.Optional;
 

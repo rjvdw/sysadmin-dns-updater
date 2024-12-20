@@ -1,4 +1,4 @@
-package dev.rdcl.tools.digitalocean.domains;
+package dev.rdcl.sysadmin.dnsupdater.digitalocean.domains;
 
 import java.util.List;
 

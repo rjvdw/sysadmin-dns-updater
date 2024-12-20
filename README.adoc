@@ -1,12 +1,8 @@
-= Sysadmin tooling
-
-This application provides some tooling for common system administration tasks.
-
-== DNS Updater
+= DNS Updater
 
 The DNS updater automatically updates DNS records for specified domains to the public IPv4 or IPv6 address of the machine the application is running on.
 
-=== Setup
+== Setup
 
 [%header,cols="3,1,6"]
 |===
@@ -49,7 +45,7 @@ The DNS updater automatically updates DNS records for specified domains to the p
 
 It's also necessary to link:https://quarkus.io/guides/mailer-reference#configuring-the-smtp-credentials[configure the Quarkus mailer].
 
-=== Configuration
+== Configuration
 
 The domains that need to be checked should be specified in a configuration JSON.
 This JSON is described by link:./dns-updater-config.schema.json[dns-updater-config.schema.json].

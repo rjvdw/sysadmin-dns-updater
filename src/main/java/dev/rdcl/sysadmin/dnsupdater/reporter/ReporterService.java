@@ -1,4 +1,4 @@
-package dev.rdcl.tools.reporter;
+package dev.rdcl.sysadmin.dnsupdater.reporter;
 
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
